@@ -22,10 +22,9 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
     page_width, page_height = letter
 
     title, author, draft_date, cast_list = "", "", "", []
-    page_number = 1  # Start counting pages
+    new_blocks = []  # Store only non-metadata blocks
 
     # ✅ **Extract Metadata Before Rendering**
-    new_blocks = []  # Store only non-metadata blocks
     for element in parsed_script:
         if element["type"] == "metadata":
             text = element["text"]
@@ -38,7 +37,10 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         elif element["type"] == "cast":
             cast_list = element["text"] if isinstance(element["text"], list) else element["text"].split(", ")
         else:
-            new_blocks.append(element)  # ✅ Store only non-metadata blocks
+            new_blocks.append(element)
+
+    # ✅ **Set Page Numbering Rules**
+    page_number = 0 if title_style == "titlepage" else 1  # **Page 0 for titlepage, Page 1 for in-body**
 
     # ✅ **Render Title Page for Standard Format**
     if title_style == "titlepage":
@@ -47,7 +49,7 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
 
         if title:
             c.drawCentredString(page_width / 2, y_position, title)
-            y_position -= 40  # Space between title and author
+            y_position -= 40
 
         if author:
             c.drawCentredString(page_width / 2, y_position, author)
@@ -58,18 +60,17 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
             y_position -= 80  # Extra space before screenplay starts
 
         if cast_list:
-            c.drawString(1.5 * inch, inch + 50, "CAST")  # Label
+            c.drawString(1.5 * inch, inch + 50, "CAST")
             y_position = inch + 30
             for cast_name in cast_list:
                 c.drawString(1.5 * inch, y_position, cast_name)
                 y_position -= 15  # Single-space each name
 
-        # ✅ **Fix: Avoid Extra Blank Page in Standard Format**
+        # ✅ **Fix: Only start a new page if there is screenplay content**
         if new_blocks:
-            y_position -= 30  # Space before screenplay starts
-
-        c.showPage()  # Move to screenplay content
-        page_number += 1  # First actual content page starts at 2
+            c.showPage()
+            page_number = 1  # ✅ Reset page number to 1 for screenplay content
+            y_position = page_height - inch
 
     # ✅ **Render In-Body Title for Parenthetical Actions Format**
     elif title_style == "inbody":
@@ -77,27 +78,27 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         y_position = page_height - inch  # Start at top
 
         if title:
-            c.drawString(1.5 * inch, y_position, f'"{title}"')  # Left-aligned, wrapped in quotes
+            c.drawString(1.5 * inch, y_position, f'"{title}"')
             y_position -= 15
 
         if author:
-            c.drawString(1.5 * inch, y_position, author)  # Left-aligned author
+            c.drawString(1.5 * inch, y_position, author)
             y_position -= 15
 
         if draft_date:
-            c.drawString(1.5 * inch, y_position, draft_date)  # Left-aligned date
-            y_position -= 30  # Extra space before cast list
+            c.drawString(1.5 * inch, y_position, draft_date)
+            y_position -= 30
 
         if cast_list:
-            c.drawString(1.5 * inch, y_position, "CAST")  # Label
-            y_position -= 15  # Space between "CAST" and names
+            c.drawString(1.5 * inch, y_position, "CAST")
+            y_position -= 15
             for cast_name in cast_list:
                 c.drawString(1.5 * inch, y_position, cast_name)
                 y_position -= 15  # Single-space each name
 
         y_position -= 30  # Extra space before screenplay starts
 
-    # ✅ **Render Screenplay Body Using `new_blocks` (No Duplicates)**
+    # ✅ **Render Screenplay Body**
     c.setFont("Courier", 12)
     for element in new_blocks:
         text = element["text"]
@@ -105,40 +106,39 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         right_margin = page_width - settings[element["type"]]["right_margin"] * inch
         max_width = right_margin - left_margin
 
-        # ✅ **Convert Lists to Strings Before Processing**
         if isinstance(text, list):
-            text = "\n".join(text)  # Convert lists (e.g., cast) to formatted text
+            text = "\n".join(text)
 
-        # ✅ **Fix: Wrap Actions in Parentheses if Using Parenthetical Actions Format**
+        # ✅ **Fix: Wrap Actions in Parentheses for Parenthetical Actions Format**
         if element["type"] == "action" and format_style == "parenthetical_actions":
-            text = f"({text})"  # Wrap action text in parentheses
+            text = f"({text})"
             wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
         elif element["type"] == "action":
-            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))  # Normal action
+            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
         elif element["type"] == "scene":
-            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))  # Scene always wrapped
+            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
         else:
-            wrapped_text = text.split("\n")  # Otherwise, split normally
+            wrapped_text = text.split("\n")
 
         for line in wrapped_text:
             if y_position < inch:
                 c.showPage()
                 c.setFont("Courier", 12)
-                page_number += 1  # Increment page number when a new page is created
-                y_position = page_height - inch
+                page_number += 1  # ✅ **Increment Page Number**
+                y_position = page_height - inch  # Reset y-position
 
             c.drawString(left_margin, y_position, line)
-            y_position -= 15  # Default single spacing
+            y_position -= 15
 
         # ✅ **Apply Double Spacing for Everything Except Speakers & Parentheticals**
         if element["type"] not in ["character", "parenthetical"]:
             y_position -= 15  # Extra space for all other blocks (double spacing)
 
         # ✅ **Add Page Numbers (If Enabled)**
-        if page_numbers and y_position < page_height - inch:  # Only add page numbers on non-title pages
+        if page_numbers and y_position < page_height - inch:
             page_label = f"{title} - {page_number}." if title_with_page_number else f"{page_number}."
             c.setFont("Courier", 10)
             c.drawRightString(page_width - inch, page_height - 0.5 * inch, page_label)
-            c.setFont("Courier", 12)  # Reset font for the next block
+            c.setFont("Courier", 12)
 
     c.save()

@@ -11,8 +11,6 @@ def parse_fountain(file_path):
     for ii, line in enumerate(lines):
         stripped = line.strip()
 
-        print(ii, line, blocks)  # Debugging output
-
         # ✅ **Blank line resets current block**
         if not stripped:
             if current_block:
@@ -23,19 +21,19 @@ def parse_fountain(file_path):
         # ✅ **Handle Title Page Metadata Correctly**
         if stripped.startswith(("Title:", "Credit:", "Author:", "Draft date:")):
             blocks.append({"type": "metadata", "text": stripped})
-            continue  # No need to track in `current_block`
+            continue  # No need to track in current_block
         
         # ✅ **Handle Cast List Separately**
         elif stripped.startswith("Cast:"):
             cast_names = stripped.replace("Cast:", "").strip()
             cast_list = [name.strip() for name in cast_names.strip("[]").split(",")]
             blocks.append({"type": "cast", "text": cast_list})  # Store cast as list
-            continue  # No need to track in `current_block`
+            continue  # No need to track in current_block
         
         # ✅ **Handle Transitions**
         elif stripped in ["BLACKOUT", "FADE OUT.", "FADE TO BLACK."] or stripped.endswith("TO:"):
             blocks.append({"type": "transition", "text": stripped})
-            continue  # No need to track in `current_block`
+            continue  # No need to track in current_block
         
         # ✅ **Handle Character Names**
         elif stripped.isupper() and not stripped.startswith(("INT.", "EXT.")):
