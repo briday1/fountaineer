@@ -1,0 +1,16 @@
+{
+    "title_style": "titlepage",
+    "metadata": { "left_margin": 1.5, "right_margin": 1 },
+    "cast": { "left_margin": 1.5, "right_margin": 1 },
+    "scene": { "left_margin": 1.5, "right_margin": 1 },
+    "action": { "left_margin": 1.5, "right_margin": 1 },
+    "character": { "left_margin": 3.7, "right_margin": 1 },
+    "parenthetical": { "left_margin": 3.1, "right_margin": 1 },
+    "dialogue": { "left_margin": 2.5, "right_margin": 1 },
+    "transition": { "left_margin": 4, "right_margin": 1 },
+    "spacing_rules": {
+        "single_spacing": true,
+        "double_after_scene": true,
+        "double_after_dialogue": true
+    }
+}
