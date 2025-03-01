@@ -1,5 +1,7 @@
 {
     "title_style": "titlepage",
+    "page_numbers": true,
+    "title_with_page_number": false,
     "metadata": { "left_margin": 1.5, "right_margin": 1 },
     "cast": { "left_margin": 1.5, "right_margin": 1 },
     "scene": { "left_margin": 1.5, "right_margin": 1 },

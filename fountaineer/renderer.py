@@ -15,12 +15,15 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
     parsed_script = parse_fountain(file_path)
     title_style = settings.get("title_style", "titlepage")  # 'titlepage' or 'inbody'
     format_style = settings.get("format_style", "standard")  # 'standard' or 'parenthetical_actions'
+    page_numbers = settings.get("page_numbers", True)  # Default to True
+    title_with_page_number = settings.get("title_with_page_number", False)  # Default to False
 
     c = canvas.Canvas(output_path, pagesize=letter)
     page_width, page_height = letter
 
     title, author, draft_date, cast_list = "", "", "", []
-    
+    page_number = 1  # Start counting pages
+
     # ✅ **Extract Metadata Before Rendering**
     new_blocks = []  # Store only non-metadata blocks
     for element in parsed_script:
@@ -64,6 +67,9 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         # ✅ **Fix: Avoid Extra Blank Page in Standard Format**
         if new_blocks:
             y_position -= 30  # Space before screenplay starts
+
+        c.showPage()  # Move to screenplay content
+        page_number += 1  # First actual content page starts at 2
 
     # ✅ **Render In-Body Title for Parenthetical Actions Format**
     elif title_style == "inbody":
@@ -118,6 +124,7 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
             if y_position < inch:
                 c.showPage()
                 c.setFont("Courier", 12)
+                page_number += 1  # Increment page number when a new page is created
                 y_position = page_height - inch
 
             c.drawString(left_margin, y_position, line)
@@ -126,5 +133,12 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         # ✅ **Apply Double Spacing for Everything Except Speakers & Parentheticals**
         if element["type"] not in ["character", "parenthetical"]:
             y_position -= 15  # Extra space for all other blocks (double spacing)
+
+        # ✅ **Add Page Numbers (If Enabled)**
+        if page_numbers and y_position < page_height - inch:  # Only add page numbers on non-title pages
+            page_label = f"{title} - {page_number}." if title_with_page_number else f"{page_number}."
+            c.setFont("Courier", 10)
+            c.drawRightString(page_width - inch, page_height - 0.5 * inch, page_label)
+            c.setFont("Courier", 12)  # Reset font for the next block
 
     c.save()
