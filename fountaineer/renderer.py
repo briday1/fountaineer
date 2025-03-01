@@ -112,11 +112,13 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         # ✅ **Fix: Wrap Actions in Parentheses for Parenthetical Actions Format**
         if element["type"] == "action" and format_style == "parenthetical_actions":
             text = f"({text})"
-            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
+            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")
         elif element["type"] == "action":
-            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
+            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")
         elif element["type"] == "scene":
-            wrapped_text = textwrap.wrap(text, width=int(max_width / (7.2)))
+            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")
+        elif element["type"] == "dialogue":
+            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")  # ✅ **Properly wrap dialogue**
         else:
             wrapped_text = text.split("\n")
 
