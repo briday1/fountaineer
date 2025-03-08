@@ -18,13 +18,14 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
     page_numbers = settings.get("page_numbers", True)  # Default to True
     title_with_page_number = settings.get("title_with_page_number", False)  # Default to False
 
+    line_spacing = 14  
+
     c = canvas.Canvas(output_path, pagesize=letter)
     page_width, page_height = letter
 
     title, author, draft_date, cast_list = "", "", "", []
-    new_blocks = []  # Store only non-metadata blocks
+    new_blocks = []  
 
-    # ✅ **Extract Metadata Before Rendering**
     for element in parsed_script:
         if element["type"] == "metadata":
             text = element["text"]
@@ -33,76 +34,69 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
             elif text.startswith("Author:"):
                 author = text.replace("Author: ", "")
             elif text.startswith("Draft date:") and not draft_date:
-                draft_date = text.replace("Draft date: ", "")  # Only store once
+                draft_date = text.replace("Draft date: ", "")  
         elif element["type"] == "cast":
             cast_list = element["text"] if isinstance(element["text"], list) else element["text"].split(", ")
         else:
             new_blocks.append(element)
 
-    # ✅ **Set Page Numbering Rules**
-    page_number = 0 if title_style == "titlepage" else 1  # **Page 0 for titlepage, Page 1 for in-body**
+    page_number = 0 if title_style == "titlepage" else 1  
 
-    # ✅ **Render Title Page for Standard Format**
     if title_style == "titlepage":
         c.setFont("Courier", 12)
-        y_position = page_height - 3 * inch  # Start title in middle of page
+        y_position = page_height - 3 * inch  
 
         if title:
             c.drawCentredString(page_width / 2, y_position, title)
-            y_position -= 40
+            y_position -= 3 * line_spacing  
 
         if author:
             c.drawCentredString(page_width / 2, y_position, author)
-            y_position -= 15
+            y_position -= line_spacing
 
         if draft_date:
             c.drawCentredString(page_width / 2, y_position, draft_date)
-            y_position -= 80  # Extra space before screenplay starts
+            y_position -= 6 * line_spacing  
 
         if cast_list:
             c.drawString(1.5 * inch, inch + 50, "CAST")
             y_position = inch + 30
             for cast_name in cast_list:
                 c.drawString(1.5 * inch, y_position, cast_name)
-                y_position -= 15  # Single-space each name
+                y_position -= line_spacing  
 
-        # ✅ **Fix: Only start a new page if there is screenplay content**
         if new_blocks:
             c.showPage()
-            page_number = 1  # ✅ Reset page number to 1 for screenplay content
+            page_number = 1  
             y_position = page_height - inch
 
-    # ✅ **Render In-Body Title for Parenthetical Actions Format**
     elif title_style == "inbody":
         c.setFont("Courier", 12)
-        y_position = page_height - inch  # Start at top
+        y_position = page_height - inch  
 
         left_margin = settings["metadata"]["left_margin"] * inch
 
-
         if title:
             c.drawString(left_margin, y_position, f'"{title}"')
-            y_position -= 15
+            y_position -= line_spacing
 
         if author:
             c.drawString(left_margin, y_position, author)
-            y_position -= 15
+            y_position -= line_spacing
 
         if draft_date:
             c.drawString(left_margin, y_position, draft_date)
-            y_position -= 30
+            y_position -= 2 * line_spacing
 
         if cast_list:
-            y_position -= 15
             c.drawString(left_margin, y_position, "CAST")
-            y_position -= 15
+            y_position -= line_spacing
             for cast_name in cast_list:
                 c.drawString(left_margin, y_position, cast_name)
-                y_position -= 15  # Single-space each name
+                y_position -= line_spacing  
 
-        y_position -= 30  # Extra space before screenplay starts
+        y_position -= 2 * line_spacing  
 
-    # ✅ **Render Screenplay Body**
     c.setFont("Courier", 12)
     for element in new_blocks:
         text = element["text"]
@@ -113,7 +107,6 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         if isinstance(text, list):
             text = "\n".join(text)
 
-        # ✅ **Fix: Wrap Actions in Parentheses for Parenthetical Actions Format**
         if element["type"] == "action" and format_style == "parenthetical_actions":
             text = f"({text})"
             wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")
@@ -122,7 +115,7 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         elif element["type"] == "scene":
             wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")
         elif element["type"] == "dialogue":
-            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")  # ✅ **Properly wrap dialogue**
+            wrapped_text = textwrap.fill(text, width=int(max_width / (7.2))).split("\n")  
         else:
             wrapped_text = text.split("\n")
 
@@ -130,17 +123,15 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
             if y_position < inch:
                 c.showPage()
                 c.setFont("Courier", 12)
-                page_number += 1  # ✅ **Increment Page Number**
-                y_position = page_height - inch  # Reset y-position
+                page_number += 1  
+                y_position = page_height - inch  
 
             c.drawString(left_margin, y_position, line)
-            y_position -= 15
+            y_position -= line_spacing  
 
-        # ✅ **Apply Double Spacing for Everything Except Speakers & Parentheticals**
         if element["type"] not in ["character", "parenthetical"]:
-            y_position -= 15  # Extra space for all other blocks (double spacing)
+            y_position -= line_spacing  
 
-        # ✅ **Add Page Numbers (If Enabled)**
         if page_numbers and y_position < page_height - inch:
             page_label = f"{title} - {page_number}." if title_with_page_number else f"{page_number}."
             c.setFont("Courier", 10)
