@@ -77,23 +77,26 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
         c.setFont("Courier", 12)
         y_position = page_height - inch  # Start at top
 
+        left_margin = settings["metadata"]["left_margin"] * inch
+
+
         if title:
-            c.drawString(1.5 * inch, y_position, f'"{title}"')
+            c.drawString(left_margin, y_position, f'"{title}"')
             y_position -= 15
 
         if author:
-            c.drawString(1.5 * inch, y_position, author)
+            c.drawString(left_margin, y_position, author)
             y_position -= 15
 
         if draft_date:
-            c.drawString(1.5 * inch, y_position, draft_date)
+            c.drawString(left_margin, y_position, draft_date)
             y_position -= 30
 
         if cast_list:
-            c.drawString(1.5 * inch, y_position, "CAST")
+            c.drawString(left_margin, y_position, "CAST")
             y_position -= 15
             for cast_name in cast_list:
-                c.drawString(1.5 * inch, y_position, cast_name)
+                c.drawString(left_margin, y_position, cast_name)
                 y_position -= 15  # Single-space each name
 
         y_position -= 30  # Extra space before screenplay starts
