@@ -93,6 +93,7 @@ def render_fountain_to_pdf(file_path, output_path, config_path):
             y_position -= 30
 
         if cast_list:
+            y_position -= 15
             c.drawString(left_margin, y_position, "CAST")
             y_position -= 15
             for cast_name in cast_list:
