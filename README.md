@@ -2,10 +2,10 @@
 
 Fountaineer is a Python tool for compiling Fountain screenplay files into properly formatted PDFs.
 
-## Installation
+## Installation 
 
 ```sh
-pip install .
+pip install git+https://github.com/briday1/fountaineer.git
 ```
 
 ## Usage
