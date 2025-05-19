@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "fountaineer"
 version = "1.0.0"
 description = "A Python tool for compiling Fountain scripts to formatted PDFs."
-authors = [{ name = "Your Name", email = "your.email@example.com" }]
+authors = [{ name = "Brian Day", email = "brian.day1@gmail.com" }]
 dependencies = ["reportlab"]
 requires-python = ">=3.7"
 
